@@ -8,6 +8,7 @@ public class MonsterSlayer
         Console.WriteLine("Welcome to Monster Slayer!");
         Player player = new Player(100);
         Monster monster = new Monster(100);
+        ConsoleMouseSupport.EnableMouseSupport();
         new AsciiUI(player, monster).Run();
         Console.WriteLine("Thanks for playing!");
     }

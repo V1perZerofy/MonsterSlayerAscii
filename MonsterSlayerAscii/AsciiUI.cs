@@ -30,24 +30,29 @@ namespace MonsterSlayerAscii
                 DisplayHealthBar("Player", player.Health, player.MaxHealth, 105, "\u001b[38;5;46m");
                 DisplayHealthBar("Monster", monster.Health, monster.MaxHealth, 105, "\u001b[38;5;196m");
                 Console.WriteLine("\n\n");
+                // Cursor auf die aktuelle Zeile für das BattleMenu setzen
+                int menuStartY = Console.CursorTop;
                 BattleMenu();
 
-                char input = Console.ReadKey().KeyChar;
-                switch (char.ToLower(input))
+                //char input = Console.ReadKey().KeyChar;
+                var (mouseX, mouseY, clicked) = ConsoleMouseSupport.WaitForMouseClick();
+                string input = clicked ? GetClickedAction(mouseX, mouseY, menuStartY) : "";
+                // Check if the mouseclick was in the battle menu area attack is 
+                switch (input)
                 {
-                    case 'a':
+                    case "a":
                         var (pDmgA, mDmgA) = logic.HandleAttack();
                         UpdateInfo("attack", pDmgA, mDmgA);
                         break;
-                    case 'e':
+                    case "e":
                         var (pDmgE, mDmgE, successE) = logic.HandleExtendedAttack();
                         UpdateInfo(successE ? "extended" : "cooldown", pDmgE, mDmgE, cooldown: player.ExtendedAttackValue);
                         break;
-                    case 'h':
+                    case "h":
                         var (heal, mDmgH, successH) = logic.HandleHeal();
                         UpdateInfo(successH ? "heal" : "cantheal", healAmount: heal, monsterDmg: mDmgH);
                         break;
-                    case 's':
+                    case "s":
                         UpdateInfo("surrender");
                         Console.Clear();
                         DisplayLogo();
@@ -153,6 +158,38 @@ namespace MonsterSlayerAscii
             Console.ResetColor();
         }
 
+        // Angepasst: menuStartY wird übergeben
+        private string GetClickedAction(int mouseX, int mouseY, int menuStartY)
+        {
+            int boxWidth = 25;
+            int boxHeight = 3;
+            int margin = 4;
+            int startX = (Console.WindowWidth - (2 * boxWidth + margin)) / 2;
+            int startY = menuStartY;
+
+            for (int row = 0; row < 2; row++)
+            {
+                for (int col = 0; col < 2; col++)
+                {
+                    int x = startX + col * (boxWidth + margin);
+                    int y = startY + row * (boxHeight + 1);
+
+                    if (mouseX >= x && mouseX < x + boxWidth &&
+                        mouseY >= y && mouseY < y + boxHeight)
+                    {
+                        // Map position to action
+                        if (row == 0 && col == 0) return "a";
+                        if (row == 0 && col == 1) return "e";
+                        if (row == 1 && col == 0) return "h";
+                        if (row == 1 && col == 1) return "s";
+                    }
+                }
+            }
+
+            return "";
+        }
+
+
         private void UpdateInfo(string action, int playerDmg = 0, int monsterDmg = 0, int healAmount = 0, int cooldown = 0)
         {
             currentInfo = action switch
@@ -169,6 +206,7 @@ namespace MonsterSlayerAscii
                 _ => currentInfo
             };
         }
+
     }
 
 }
